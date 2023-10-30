@@ -11,5 +11,5 @@ with open("AS3a.log","r") as f:
             # print(line_num)
             lumo = re.search(r"Alpha virt. eigenvalues \-\- .*[\s]+([?\-0-9.]+)$",line)
         if ("Beta  occ. eigenvalues" in line) and (line_num==virt+1):
-            homo = re.search(r"Beta  occ. eigenvalues \-\- .*[\s]+([?\-0-9.]+)$",line)
+            homo = re.search(r"Beta  occ. eigenvalues \-\-[\s]+([?\-0-9.]+).*",line)
             print("{}, {}, {}".format(dist.group(1),lumo.group(1), homo.group(1)))
