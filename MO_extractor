@@ -1,6 +1,6 @@
 import re
 
-
+mo = open ("MO.csv","w")
 with open("AS3a.log","r") as f:
     for line_num, line in enumerate(f):
         if "R(7,8)" in line:
@@ -13,3 +13,5 @@ with open("AS3a.log","r") as f:
         if ("Beta  occ. eigenvalues" in line) and (line_num==virt+1):
             homo = re.search(r"Beta  occ. eigenvalues \-\-[\s]+([?\-0-9.]+).*",line)
             print("{}, {}, {}".format(dist.group(1),lumo.group(1), homo.group(1)))
+            mo.write("{}, {}, {}\n".format(dist.group(1),lumo.group(1), homo.group(1)))
+mo.close()
