@@ -1,0 +1,31 @@
+import re
+
+mo = open ("MO.csv","w")
+dict = {}
+with open("nu2_scan_H.log","r") as f:
+    for line_num, line in enumerate(f):
+        if "R(17,23)" in line:
+            dist = re.search(r".*R\(17,23\)[\s]+([?\-0-9.]+).*", line)
+            n = line_num
+            # print(str.group(1))
+        if "46         O" in line:
+            virt = line_num
+            # print(line_num)
+            homo = re.search(r"46         O[\s]+([?\-0-9.]+)",line)
+        if ("47         V" in line) and (line_num==virt+1):
+            lumo = re.search(r"47         V[\s]+([?\-0-9.]+).*",line)
+        # if (dist):
+        #     d = re.search(r".*R\(17,23\)[\s]+([?\-0-9.]+).*", line)
+        #     if (dist!=d):
+            dict[dist.group(1)] = "{},{}".format(homo.group(1),lumo.group(1))
+            # print("{}, {}, {}".format(dist.group(1),homo.group(1), lumo.group(1)))
+            # mo.write("{}, {}, {}, {}, {}\n".format(n,virt,dist.group(1),homo.group(1), lumo.group(1)))
+
+            
+# print(dict) 
+
+for keys,items in dict.items():
+    mo.writelines("{},{}\n".format(keys,items))
+
+       
+mo.close()
