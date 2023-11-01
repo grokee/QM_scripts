@@ -3,40 +3,78 @@ import os
 
 origin = os.getcwd()
 
+
+
+
 def browse_folder(folder):
     for file in os.scandir(folder):
         if file.path.endswith("log"):
             name = os.path.basename(file.path)
+            # generate_patterns(name)
             csv_creator(name)
                        
-                
+def generate_patterns(path):
+    atom_line = 0
+    homo_line = 0
+    dist_search = ""
+    dist_pattern = ""
+    homo_search = ""
+    homo_pattern = ""
+    lumo_search = ""
+    lumo_pattern = ""
+    with open(path,"r") as f:
+        for line_num, line in enumerate(f):
+            if "The following ModRedundant input" in line:
+                atom_line = line_num+1
+            if (line_num == atom_line) and ("B  " in line):
+                atoms = re.search(r"B[\s]+([0-9]+)[\s]+([0-9]+).*", line)
+                dist_search = "R("+str(atoms.group(1))+","+str(atoms.group(2))+")"
+                dist_pattern = ".*R\("+str(atoms.group(1))+","+str(atoms.group(2))+"\)"+"[\s]+([?\-0-9.]+).*"
+            if "Orbital energies and kinetic energies (alpha):" in line:
+                homo_line = line_num+6
+            if (line_num == homo_line) and ("  O  " in line):
+                occup = re.search(r"([0-9]+[\s]+O).*",line)
+                homo_search = occup.group(1)
+                homo_pattern = occup.group(1)+"[\s]+([?\-0-9.]+)"
+            if (line_num == homo_line+1) and ("  V  " in line):
+                free = re.search(r"([0-9]+[\s]+V).*",line)
+                lumo_search = free.group(1)
+                lumo_pattern = free.group(1) + "[\s]+([?\-0-9.]+).*"
+                # break
+    pattern = [dist_search,dist_pattern,homo_search,homo_pattern,lumo_search,lumo_pattern]
+    return pattern
+    # print(dist_search)        
+    # print(dist_pattern)
+    # print(homo_pattern)
+    # print(lumo_pattern)
+            
 
 def csv_creator(path):
     compound = re.search(r"(.*)\.log",path)
     print(compound.group(1))
     csv_title = os.path.join("MO","MO_"+compound.group(1)+".csv")
-    # csv_title = "MO_"+compound.group(1)+".csv"
-    mo = open (csv_title,"w")
     dict = {}
+    pattern =  generate_patterns(path)
+    mo = open (csv_title,"w")
     with open(path,"r") as f:
-         for line_num, line in enumerate(f):
-          if "R(17,23)" in line:
-            dist = re.search(r".*R\(17,23\)[\s]+([?\-0-9.]+).*", line)
-            n = line_num
-            # print(str.group(1))
-          if "46         O" in line:
+        for line_num, line in enumerate(f):
+          if pattern[0] in line:
+            dist = re.search(pattern[1], line)
+            print(dist.group(1))
+            # n = line_num
+          if pattern[2] in line:
             virt = line_num
             # print(line_num)
-            homo = re.search(r"46         O[\s]+([?\-0-9.]+)",line)
-          if ("47         V" in line) and (line_num==virt+1):
-            lumo = re.search(r"47         V[\s]+([?\-0-9.]+).*",line)
+            homo = re.search(pattern[3],line)
+          if (pattern[4] in line) and (line_num==virt+1):
+            lumo = re.search(pattern[5],line)
             dict[dist.group(1)] = "{},{}".format(homo.group(1),lumo.group(1))
             # print("{}, {}, {}".format(dist.group(1),homo.group(1), lumo.group(1)))
             # mo.write("{}, {}, {}, {}, {}\n".format(n,virt,dist.group(1),homo.group(1), lumo.group(1)))
 
     for keys,items in dict.items():
       mo.writelines("{},{}\n".format(keys,items))
-
+    
     mo.close()
 
 
