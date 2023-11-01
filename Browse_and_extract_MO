@@ -3,9 +3,6 @@ import os
 
 origin = os.getcwd()
 
-
-
-
 def browse_folder(folder):
     for file in os.scandir(folder):
         if file.path.endswith("log"):
@@ -47,34 +44,55 @@ def generate_patterns(path):
     # print(dist_pattern)
     # print(homo_pattern)
     # print(lumo_pattern)
-            
+
+def write_mo_max(max_mo):
+    with open (os.path.join("MO","mo_max.csv"),"a") as f:
+        f.write(max_mo)
+                    
+    
 
 def csv_creator(path):
-    compound = re.search(r"(.*)\.log",path)
+    compound = re.search(r"(nu[0-9]+|e[0-9]+).*\.log",path)
     print(compound.group(1))
     csv_title = os.path.join("MO","MO_"+compound.group(1)+".csv")
     dict = {}
     pattern =  generate_patterns(path)
-    mo = open (csv_title,"w")
+
+    homo_max = -1000
+    lumo_max = -1000
+    dist_homo_max = 0
+    dist_lumo_max = 0
     with open(path,"r") as f:
         for line_num, line in enumerate(f):
           if pattern[0] in line:
             dist = re.search(pattern[1], line)
-            print(dist.group(1))
+            # print(dist.group(1))
             # n = line_num
           if pattern[2] in line:
             virt = line_num
             # print(line_num)
             homo = re.search(pattern[3],line)
+            if float (homo.group(1)) > homo_max:
+                homo_max = float (homo.group(1))
+                dist_homo_max = dist.group(1)
           if (pattern[4] in line) and (line_num==virt+1):
             lumo = re.search(pattern[5],line)
+            if float (lumo.group(1)) > lumo_max:
+                lumo_max = float (lumo.group(1))
+                dist_lumo_max = dist.group(1)
             dict[dist.group(1)] = "{},{}".format(homo.group(1),lumo.group(1))
             # print("{}, {}, {}".format(dist.group(1),homo.group(1), lumo.group(1)))
             # mo.write("{}, {}, {}, {}, {}\n".format(n,virt,dist.group(1),homo.group(1), lumo.group(1)))
 
-    for keys,items in dict.items():
-      mo.writelines("{},{}\n".format(keys,items))
+    if "nu" in compound.group(1):
+        write_mo_max("{},{},{}\n".format(compound.group(1),homo_max,dist_homo_max))
+    if "e" in compound.group(1):
+        write_mo_max("{},{},{}\n".format(compound.group(1),lumo_max,dist_lumo_max))
     
+
+    mo = open (csv_title,"w")    
+    for keys,items in dict.items():        
+      mo.writelines("{},{}\n".format(keys,items))
     mo.close()
 
 
