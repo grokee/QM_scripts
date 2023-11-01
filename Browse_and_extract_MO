@@ -1,0 +1,44 @@
+import re
+import os
+
+origin = os.getcwd()
+
+def browse_folder(folder):
+    for file in os.scandir(folder):
+        if file.path.endswith("log"):
+            name = os.path.basename(file.path)
+            csv_creator(name)
+                       
+                
+
+def csv_creator(path):
+    compound = re.search(r"(.*)\.log",path)
+    print(compound.group(1))
+    csv_title = os.path.join("MO","MO_"+compound.group(1)+".csv")
+    # csv_title = "MO_"+compound.group(1)+".csv"
+    mo = open (csv_title,"w")
+    dict = {}
+    with open(path,"r") as f:
+         for line_num, line in enumerate(f):
+          if "R(17,23)" in line:
+            dist = re.search(r".*R\(17,23\)[\s]+([?\-0-9.]+).*", line)
+            n = line_num
+            # print(str.group(1))
+          if "46         O" in line:
+            virt = line_num
+            # print(line_num)
+            homo = re.search(r"46         O[\s]+([?\-0-9.]+)",line)
+          if ("47         V" in line) and (line_num==virt+1):
+            lumo = re.search(r"47         V[\s]+([?\-0-9.]+).*",line)
+            dict[dist.group(1)] = "{},{}".format(homo.group(1),lumo.group(1))
+            # print("{}, {}, {}".format(dist.group(1),homo.group(1), lumo.group(1)))
+            # mo.write("{}, {}, {}, {}, {}\n".format(n,virt,dist.group(1),homo.group(1), lumo.group(1)))
+
+    for keys,items in dict.items():
+      mo.writelines("{},{}\n".format(keys,items))
+
+    mo.close()
+
+
+if __name__ == "__main__":
+    browse_folder(origin)
