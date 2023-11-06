@@ -1,0 +1,50 @@
+  import numpy as np
+import matplotlib.pyplot as plt
+import re
+import os
+
+origin = os.getcwd()
+
+def browse_folder(folder):
+    for file in os.scandir(folder):
+        if file.path.endswith("csv"):
+            name = os.path.basename(file.path)
+            plotting(name)
+ 
+def plotting(name):
+    dist = []
+    homo = []
+    lumo = []
+    x = []
+    val =[]
+    y = []
+
+    with open(name,"r") as f:
+        for line in f: 
+            # line = f.readline()
+            result = re.search(r"(.*),(.*),(.*)",line)
+            dist.append(result.group(1))
+            homo.append(result.group(2))
+            lumo.append(result.group(3))
+    compound = re.search(r"MO_(nu[0-9]+|e[0-9]+).csv",name)
+    print(compound.group(1))
+    if "nu" in compound.group(1):
+        title = name
+        data = homo
+    if "e" in compound.group(1):
+        title = name  
+        data = lumo
+    print(data)
+    for value in data:
+        y.append(float(value))
+    for value in dist:
+        x.append(float(value))
+    # if compound.group(1) == "nu2" :
+    #     plt.plot(dist,y, label=compound.group(1))
+    # if compound.group(1) == "e2" :
+    plt.plot(dist, y, label=compound.group(1))
+    plt.legend()
+
+
+if __name__ == "__main__":
+    browse_folder(origin)
